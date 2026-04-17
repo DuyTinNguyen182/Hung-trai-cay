@@ -5,348 +5,319 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hứng Trái Cây</title>
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #f0f4f8; /* Màu nền ngoài khung game */
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden; /* Ngăn cuộn trang */
-        }
-
-        #game-container {
-            width: 430px; /* Chiều rộng khung game (giống iPhone 14 Pro Max) */
-            height: 932px; /* Chiều cao khung game */
-            background: linear-gradient(to bottom, #A1C4FD 0%, #C2E9FB 100%); /* Nền gradient xanh */
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); /* Hiệu ứng đổ bóng */
-            position: relative;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            border-radius: 10px;
+            background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            touch-action: none; /* Ngăn cuộn trang khi vuốt */
         }
-
-        /* HUD - Thanh trạng thái */
+        canvas {
+            display: block;
+        }
         #hud {
             position: absolute;
-            top: 20px;
+            top: 15px;
             left: 20px;
             right: 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            z-index: 10; /* Đảm bảo HUD luôn ở trên cùng */
-            pointer-events: none; /* Không cho phép tương tác với HUD */
-        }
-
-        #score-display {
+            font-size: 24px;
             font-weight: bold;
-            font-size: 24px;
             color: #333;
+            pointer-events: none;
+            z-index: 10;
         }
-
-        #lives-display {
-            font-size: 24px;
-            display: flex;
-            gap: 5px;
-        }
-
-        .heart {
-            color: #ff4d4d; /* Màu trái tim đỏ */
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Màn hình Game Over và Bắt đầu */
-        #game-overlay {
+        #ui {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9); /* Nền mờ cho overlay */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 20;
+        }
+        #ui h1 {
+            margin: 0 0 15px 0;
+            color: #e74c3c;
+        }
+        #ui p {
+            font-size: 22px;
+            margin-bottom: 25px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background-color: #f39c12;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #startScreen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+            z-index: 100;
+        }
+        .start-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 20; /* Overlay ở trên HUD */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        #game-overlay h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #333;
+        .start-box h2 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
         }
-
-        #game-overlay p {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        #final-score {
-            font-weight: bold;
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        #start-button, #restart-button {
-            background-color: #ffcc66; /* Màu vàng */
-            border: none;
-            padding: 15px 30px;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        #start-button:hover, #restart-button:hover {
-            background-color: #ffbd4d;
+        .start-box p {
+            margin: 0;
+            color: #555;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="hud">
-            <div id="score-display">Điểm: 0</div>
-            <div id="lives-display">
-                </div>
-        </div>
-        <canvas id="game-canvas"></canvas>
+    <div id="hud">
+        <div id="scoreDisplay">Điểm: 0</div>
+        <div id="livesDisplay">❤️❤️❤️❤️❤️</div>
+    </div>
 
-        <div id="game-overlay" class="start-screen">
-            <h1>Chạm để bắt đầu!</h1>
-            <p>Kéo giỏ để hứng trái cây, né bom nhé!</p>
-            <button id="start-button">Bắt đầu</button>
-        </div>
-
-        <div id="game-overlay" class="game-over-screen" style="display: none;">
-            <h1>Bùm! Hết mạng!</h1>
-            <div id="final-score">Tổng điểm: 0</div>
-            <button id="restart-button">Chơi lại</button>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="startScreen">
+        <div class="start-box">
+            <h2>Chạm để bắt đầu!</h2>
+            <p>Kéo giỏ hứng trái cây.<br>Trượt hoặc dính bom = Mất mạng!</p>
         </div>
     </div>
 
+    <div id="ui">
+        <h1>Game Over!</h1>
+        <p>Tổng điểm: <span id="finalScore">0</span></p>
+        <button id="restartBtn">Chơi lại</button>
+    </div>
+
     <script>
-        const canvas = document.getElementById('game-canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('score-display');
-        const livesDisplay = document.getElementById('lives-display');
-        const startScreen = document.querySelector('.start-screen');
-        const gameOverScreen = document.querySelector('.game-over-screen');
-        const finalScoreText = document.getElementById('final-score');
-        const startButton = document.getElementById('start-button');
-        const restartButton = document.getElementById('restart-button');
+        const ui = document.getElementById('ui');
+        const finalScoreText = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+        const startScreen = document.getElementById('startScreen');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
 
-        // Cấu hình game
-        const gameWidth = 430;
-        const gameHeight = 932;
-        canvas.width = gameWidth;
-        canvas.height = gameHeight;
+        // Khai báo giỏ (player) TRƯỚC khi gọi resize để tránh lỗi ReferenceError
+        const player = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight - 80,
+            size: 60,
+            draw() {
+                ctx.font = this.size + "px Arial";
+                ctx.fillText("🧺", this.x, this.y);
+            }
+        };
 
-        // Biến game
+        // Hàm thay đổi kích thước canvas
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height - 80;
+        }
+        window.addEventListener('resize', resize);
+        
+        // Khởi tạo kích thước sau khi đã có biến player
+        resize();
+
+        // Biến trạng thái game
         let score = 0;
-        let lives = 5; // Yêu cầu 2: 5 mạng
+        let lives = 5;
         let isPlaying = false;
         let isGameOver = false;
+        let frames = 0;
+        let fallSpeed = 4;
         let items = [];
-        let player;
-        let itemInterval = 80; // Tốc độ tạo item ban đầu
-        let framesSinceLastItem = 0;
 
-        // Cấu hình người chơi (giỏ)
-        const playerWidth = 100;
-        const playerHeight = 100;
-        const playerY = gameHeight - playerHeight - 20;
+        // Thiết lập vẽ ở giữa tọa độ
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
 
-        // Cấu hình item (trái cây và bom)
-        const itemSize = 50;
-        const fruitEmojis = ['🍇', '🍐', '🍓', '🍊'];
-        const bombEmoji = '💣';
+        const fruitEmojis = ["🍎", "🍊", "🍇", "🍌", "🍉", "🍓", "🍒"];
+        const bombEmoji = "💣";
 
-        class Player {
-            constructor() {
-                this.x = gameWidth / 2 - playerWidth / 2;
-                this.y = playerY;
-                this.width = playerWidth;
-                this.height = playerHeight;
-                this.dx = 0;
-                this.emoji = '🧺'; // Giỏ
-            }
-
-            draw() {
-                ctx.font = `${this.height}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.fillText(this.emoji, this.x + this.width / 2, this.y + this.height / 1.15);
-            }
-
-            update(mouseX) {
-                this.x = mouseX - this.width / 2;
-                // Giới hạn di chuyển trong khung game
-                if (this.x < 0) this.x = 0;
-                if (this.x + this.width > gameWidth) this.x = gameWidth - this.width;
+        function spawnItem() {
+            let spawnRate = Math.max(25, 80 - score); 
+            
+            if (frames % spawnRate === 0) {
+                let isBomb = Math.random() < 0.2; // 20% tỉ lệ ra bom
+                let emoji = isBomb ? bombEmoji : fruitEmojis[Math.floor(Math.random() * fruitEmojis.length)];
+                
+                items.push({
+                    x: Math.random() * (canvas.width - 60) + 30, // Tránh rớt sát lề
+                    y: -40,
+                    size: 40,
+                    emoji: emoji,
+                    isBomb: isBomb,
+                    speed: fallSpeed + Math.random() * 2 
+                });
             }
         }
 
-        class Item {
-            constructor(emoji, isBomb) {
-                this.x = Math.random() * (gameWidth - itemSize);
-                this.y = -itemSize;
-                this.width = itemSize;
-                this.height = itemSize;
-                this.speed = Math.random() * 2 + 3; // Tốc độ rơi từ 3 đến 5
-                this.emoji = emoji;
-                this.isBomb = isBomb;
-            }
+        function handleItems() {
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                item.y += item.speed;
 
-            draw() {
-                ctx.font = `${this.height}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.fillText(this.emoji, this.x + this.width / 2, this.y + this.height / 1.15);
-            }
-
-            update() {
-                this.y += this.speed;
-            }
-        }
-
-        function createItem() {
-            let isBomb = Math.random() < 0.2; // 20% khả năng tạo bom
-            let emoji = isBomb ? bombEmoji : fruitEmojis[Math.floor(Math.random() * fruitEmojis.length)];
-            items.push(new Item(emoji, isBomb));
-        }
-
-        function updateLivesDisplay() {
-            livesDisplay.innerHTML = '';
-            for (let i = 0; i < lives; i++) {
-                livesDisplay.innerHTML += '<span class="heart">❤️</span>';
-            }
-        }
-
-        function gameLoop() {
-            if (!isPlaying) return;
-
-            // Xóa canvas
-            ctx.clearRect(0, 0, gameWidth, gameHeight);
-
-            // Vẽ người chơi
-            player.draw();
-
-            // Cập nhật và vẽ các item
-            for (let i = items.length - 1; i >= 0; i--) {
-                items[i].update();
-                items[i].draw();
+                ctx.font = item.size + "px Arial";
+                ctx.fillText(item.emoji, item.x, item.y);
 
                 // Kiểm tra va chạm với giỏ
-                if (items[i].x < player.x + player.width &&
-                    items[i].x + items[i].width > player.x &&
-                    items[i].y < player.y + player.height &&
-                    items[i].y + items[i].height > player.y) {
+                let dx = player.x - item.x;
+                let dy = player.y - item.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (items[i].isBomb) {
-                        // Sửa lỗi: Trúng bom thì giảm mạng và không hứng
-                        lives--;
-                        updateLivesDisplay();
-                        // Không hứng trái cây này
+                if (distance < (player.size / 2 + item.size / 2 - 10)) {
+                    if (item.isBomb) {
+                        loseLife(); // Hứng trúng bom -> mất mạng
                     } else {
-                        // Hứng trái cây thì tăng điểm
                         score++;
-                        scoreDisplay.innerText = `Điểm: ${score}`;
+                        updateHUD();
+                        if (score % 10 === 0) fallSpeed += 0.5; // Tăng tốc độ rơi
                     }
                     items.splice(i, 1);
-                    checkGameOver();
-                    continue; // Bỏ qua phần kiểm tra rơi xuống
+                    i--;
+                    continue;
                 }
 
-                // Kiểm tra item rơi xuống đất
-                if (items[i].y > gameHeight) {
-                    if (!items[i].isBomb) {
-                        // Yêu cầu 3: Không hứng được trái cây cũng mất mạng
-                        lives--;
-                        updateLivesDisplay();
+                // Nếu item rớt xuống đáy màn hình
+                if (item.y - item.size > canvas.height) {
+                    if (!item.isBomb) {
+                        loseLife(); // Rớt trái cây -> mất mạng
                     }
                     items.splice(i, 1);
-                    checkGameOver();
+                    i--;
                 }
             }
-
-            // Tạo item mới
-            framesSinceLastItem++;
-            if (framesSinceLastItem > itemInterval) {
-                createItem();
-                framesSinceLastItem = 0;
-            }
-
-            // Tăng độ khó dần
-            if (score > 0 && score % 10 === 0 && itemInterval > 20) {
-                itemInterval -= 10;
-                score++; // Tạm thời tăng điểm để tránh gọi lại dòng này
-            }
-
-            requestAnimationFrame(gameLoop);
         }
 
-        function checkGameOver() {
+        function updateHUD() {
+            scoreDisplay.innerText = "Điểm: " + score;
+            let hearts = "";
+            for (let i = 0; i < lives; i++) hearts += "❤️";
+            livesDisplay.innerText = hearts;
+        }
+
+        function loseLife() {
+            lives--;
+            updateHUD();
             if (lives <= 0) {
-                isPlaying = false;
-                isGameOver = true;
-                gameOverScreen.style.display = 'flex';
-                finalScoreText.innerText = `Tổng điểm: ${score}`;
+                gameOver();
             }
+        }
+
+        function animate() {
+            if (isGameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isPlaying) {
+                spawnItem();
+                handleItems();
+                frames++;
+            }
+            
+            player.draw();
+            requestAnimationFrame(animate);
         }
 
         function startGame() {
+            isPlaying = true;
+            startScreen.style.display = 'none';
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            isPlaying = false;
+            ui.style.display = 'block';
+            finalScoreText.innerText = score;
+        }
+
+        function resetGame() {
             score = 0;
             lives = 5;
+            frames = 0;
+            fallSpeed = 4;
             items = [];
-            itemInterval = 80;
-            framesSinceLastItem = 0;
-            scoreDisplay.innerText = `Điểm: 0`;
-            updateLivesDisplay();
-            player = new Player();
-            isPlaying = true;
             isGameOver = false;
-            startScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            gameLoop();
+            isPlaying = true;
+            ui.style.display = 'none';
+            updateHUD();
+            animate();
         }
 
-        // Xử lý sự kiện di chuyển
-        function handleMove(e) {
+        // --- ĐIỀU KHIỂN ---
+        function movePlayer(clientX) {
             if (!isPlaying || isGameOver) return;
-            const containerRect = document.getElementById('game-container').getBoundingClientRect();
-            let mouseX;
-            if (e.type === 'touchmove') {
-                mouseX = e.touches[0].clientX - containerRect.left;
-            } else {
-                mouseX = e.clientX - containerRect.left;
-            }
-            // Chuyển đổi tọa độ màn hình sang tọa độ canvas
-            const scaleX = gameWidth / containerRect.width;
-            player.update(mouseX * scaleX);
+            player.x = clientX;
+            if (player.x < player.size / 2) player.x = player.size / 2;
+            if (player.x > canvas.width - player.size / 2) player.x = canvas.width - player.size / 2;
         }
 
-        document.getElementById('game-container').addEventListener('mousemove', handleMove);
-        document.getElementById('game-container').addEventListener('touchmove', handleMove);
+        // Bắt sự kiện chạm (Mobile) / F12 DevTools
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.id === 'restartBtn') return; 
+            if (!isPlaying && !isGameOver) {
+                startGame();
+            } else if (isPlaying) {
+                movePlayer(e.touches[0].clientX);
+            }
+        }, {passive: false});
 
-        startButton.addEventListener('click', startGame);
-        restartButton.addEventListener('click', startGame);
+        window.addEventListener('touchmove', (e) => {
+            movePlayer(e.touches[0].clientX);
+        });
 
-        // Hiển thị 5 mạng ban đầu
-        updateLivesDisplay();
+        // Bắt sự kiện click/di chuột (PC)
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.id === 'restartBtn') return;
+            if (!isPlaying && !isGameOver) {
+                startGame();
+            }
+        });
 
+        window.addEventListener('mousemove', (e) => {
+            movePlayer(e.clientX);
+        });
+
+        // Nút chơi lại
+        restartBtn.addEventListener('click', resetGame);
+        restartBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            resetGame();
+        });
+
+        // Chạy frame đầu tiên
+        updateHUD();
+        animate();
     </script>
 </body>
 </html>
